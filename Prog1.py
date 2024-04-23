@@ -1,5 +1,3 @@
-import sys
-
 class PredictiveParser:
     def __init__(self, grammar):
         # Initialize the Predictive Parser
@@ -95,11 +93,15 @@ class PredictiveParser:
             current_input = input_string[0]
             if top_stack == current_input == '$':
                 parsing_steps.append((stack[-1], current_input))
+                for item in stack:
+                      print(item, end=' ')
                 return True, parsing_steps
             elif top_stack == current_input:
                 parsing_steps.append((stack[-1], current_input))
                 stack.pop()
                 input_string = input_string[1:]
+                for item in stack:
+                      print(item, end=' ')
             elif top_stack in self.grammar.keys():
                 if (top_stack, current_input) in self.predictive_table:
                     if self.predictive_table[(top_stack, current_input)] == 'error':
@@ -111,77 +113,54 @@ class PredictiveParser:
                         production = production[::-1]
                         stack.extend(production)
                     parsing_steps.append((top_stack, production))
+                    for item in stack:
+                        print(item, end=' ')
                 else:
                     return False, parsing_steps
             else:
                 return False, parsing_steps
+       
         return False, parsing_steps
 
 
-grammar = {
-    'E': ['TQ'],
-    'Q': ['+TQ', '-TQ', 'ɛ'],
-    'T': ['FR'],
-    'R': ['*FR', '/FR', 'ɛ'],
-    'F': ['(E)', 'a']
-}
+def main():
+    grammar = {
+        'E': ['TQ'],
+        'Q': ['+TQ', '-TQ', 'ɛ'],
+        'T': ['FR'],
+        'R': ['*FR', '/FR', 'ɛ'],
+        'F': ['(E)', 'a']
+    }
 
-predictive_parser = PredictiveParser(grammar)
-predictive_parser.build_predictive_table()
+    predictive_parser = PredictiveParser(grammar)
+    predictive_parser.build_predictive_table()
 
-print("FIRST sets:")
-for key, value in predictive_parser.first.items():
-    print(f"FIRST({key}): {value}")
+    print("FIRST sets:")
+    for key, value in predictive_parser.first.items():
+        print(f"FIRST({key}): {value}")
 
-print("\nFOLLOW sets:")
-for key, value in predictive_parser.follow.items():
-    print(f"FOLLOW({key}): {value}")
+    print("\nFOLLOW sets:")
+    for key, value in predictive_parser.follow.items():
+        print(f"FOLLOW({key}): {value}")
 
-predictive_parser.build_predictive_table()
-print("\nPredictive parsing table:")
-for key, value in predictive_parser.predictive_table.items():
-    if value != 'error':
-        print(f"Parsing Table[{key[0]}, {key[1]}]: {value}")
+    print("\nPredictive parsing table:")
+    for key, value in predictive_parser.predictive_table.items():
+        if value != 'error':
+            print(f"Parsing Table[{key[0]}, {key[1]}]: {value}")
 
-# Test strings
-test_strings = [
-    "(a+a)$",
-    "(a+a)e"
-]
-
-print("\nString parsing results:")
-for test_str in test_strings:
-    result, parsing_steps = predictive_parser.parse(test_str)
-    print(f"'{test_str}': {'String is accepted/ valid' if result else 'String is not accepted/ Invalid'}")
-
-
-for test_str in test_strings:
-    stack = ['$']
-    test_str += ' $'
-    stack.append(list(grammar.keys())[0])  # Starting symbol
-    step = 0
-    while len(stack) > 0:
-        top_stack = stack[-1]
-        current_input = test_str[0]
-        if top_stack == current_input == '$':
-            if len(stack) == 1:
-                break
-            print(f"Stack: {stack}")
-            stack.pop()
+    # Test strings
+    while True:
+        test_str = input("\nInput (type 'exit' to quit): ")
+        if test_str.lower() == 'exit':
             break
-        elif top_stack == current_input:
-            stack.pop()
-            test_str = test_str[1:]
-        elif top_stack in grammar.keys():
-            if (top_stack, current_input) in predictive_parser.predictive_table:
-                if predictive_parser.predictive_table[(top_stack, current_input)] == 'error':
-                    break
-                stack.pop()
-                production = predictive_parser.predictive_table[(top_stack, current_input)]
-                if production != 'ɛ':
-                    production = production[::-1]
-                    stack.extend(production)
-            else:
-                break
-        step += 1
-print(f"Stack: {stack}")
+        result, parsing_steps = predictive_parser.parse(test_str + "$")
+        print(f"\nOutput result for '{test_str}': {'String is accepted/ valid' if result else 'String is not accepted/ Invalid'}")
+        # if not result:
+        #     print("\nStack:")
+        #     # for step in parsing_steps:
+        #     #     print(step)
+        #     # print(stack)
+
+
+if __name__ == "__main__":
+    main()
